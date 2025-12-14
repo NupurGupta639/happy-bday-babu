@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday! 🎉</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;400;600&family=Fredoka+One&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- RESET & GLOBAL STYLES --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #050505;
+            background-image: radial-gradient(circle at 50% 50%, #2a0845 0%, #000000 100%);
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Wrapper to simulate the mobile view from the video on desktop */
+        #app {
+            width: 100%;
+            max-width: 450px;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            background: transparent;
+            /* subtle glow border for desktop view */
+            box-shadow: 0 0 50px rgba(162, 155, 254, 0.1); 
+        }
+
+        /* --- SCREEN MANAGEMENT --- */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        .screen.active {
+            display: flex;
+            opacity: 1;
+            z-index: 10;
+        }
+
+        /* --- TYPOGRAPHY & BUTTONS --- */
+        h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #ff7675, #a29bfe, #fab1a0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(255, 118, 117, 0.3);
+        }
+
+        p {
+            font-size: 1rem;
+            color: #dfe6e9;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #ff7675, #d63031);
+            border: none;
+            padding: 12px 35px;
+            border-radius: 50px;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(214, 48, 49, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 15px;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 10px rgba(214, 48, 49, 0.4);
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- SCREEN 1: COUNTDOWN --- */
+        .loader-ring {
+            width: 150px;
+            height: 150px;
+            border: 5px solid rgba(255,255,255,0.1);
+            border-top: 5px solid #ff7675;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #countdown-number {
+            font-family: 'Fredoka One', cursive;
+            font-size: 4rem;
+            background: linear-gradient(to bottom, #ff7675, #a29bfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- SCREEN 2: INTRO (BEAR) --- */
+        .bear-img {
+            width: 160px;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+        /* --- SCREEN 3: CAKE --- */
+        .cake-container {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            margin-bottom: 30px;
+            cursor: pointer;
+        }
+        .cake-emoji { font-size: 8rem; z-index: 2; transition: transform 0.3s; }
+        .cake-container:active .cake-emoji { transform: scale(0.9); }
+        
+        .candle {
+            position: absolute; top: 40px; width: 12px; height: 40px;
+            background: repeating-linear-gradient(45deg, #fff, #fff 5px, #ff7675 5px, #ff7675 10px);
+            left: 50%; transform: translateX(-50%);
+            display: none; z-index: 1;
+        }
+        .flame {
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+            width: 15px; height: 25px; background: #ff9f43;
+            border-radius: 50% 50% 20% 20%;
+            box-shadow: 0 0 10px #ff9f43, 0 0 20px yellow;
+            animation: flicker 0.5s infinite alternate;
+            display: none; z-index: 3;
+        }
+        @keyframes flicker { 0% { transform: translateX(-50%) scale(1); opacity: 1; } 100% { transform: translateX(-50%) scale(1.1); opacity: 0.8; } }
+
+        /* --- SCREEN 4: BALLOONS --- */
+        .balloon-grid {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+        .balloon {
+            width: 60px; height: 80px;
+            background-color: red;
+            border-radius: 50%;
+            position: relative;
+            cursor: pointer;
+            animation: float 3s ease-in-out infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.9);
+            font-weight: bold;
+            box-shadow: inset -5px -5px 10px rgba(0,0,0,0.1);
+        }
+        .balloon::before {
+            content: ''; position: absolute; bottom: -12px; left: 50%;
+            width: 2px; height: 40px; background: rgba(255,255,255,0.5); transform: translateX(-50%);
+        }
+        .balloon.popped {
+            background: transparent !important;
+            box-shadow: none !important;
+            pointer-events: none;
+        }
+        .balloon.popped::before { display: none; }
+        .balloon-text { opacity: 0; transition: 0.3s; font-size: 1.2rem; white-space: nowrap; }
+        .balloon.popped .balloon-text { opacity: 1; transform: translateY(-10px); color: #fff; }
+        
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+        /* --- SCREEN 5: SWEET MEMORIES (STACK) --- */
+        .gallery-container {
+            width: 280px;
+            height: 380px;
+            position: relative;
+            margin-bottom: 20px;
+	    border: 5px solid white;
+	    border-radius: 5px
+        }
+        
+        .photo-card {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #fff;
+            padding: 10px 10px 40px 10px; /* Polaroid style */
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: transform 0.6s ease, opacity 0.5s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform-origin: 50% 100%;
+        }
+        
+        .photo-card img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            border-radius: 5px;
+            pointer-events: none;
+        }
+
+        /* Upload Button styling */
+        .upload-wrapper {
+            position: absolute;
+            top: 15px; right: 15px;
+            z-index: 100;
+        }
+        .upload-icon {
+            font-size: 1.5rem;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(5px);
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+        #file-input { display: none; }
+
+        /* --- SCREEN 6: MESSAGE --- */
+        .message-card {
+            background: 
+        linear-gradient(
+            rgba(255,255,255,0.85),
+            rgba(255,255,255,0.85)
+        ),
+        url("Screenshot 2025-12-14 145548.png");
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    color: #2d3436;
+    width: 85%;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    transform: rotate(-2deg);
+        }
+        .message-card::before {
+            content: ''; position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+            width: 30px; height: 30px; background: #e17055; border-radius: 50%;
+            z-index: 2; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .message-text {
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* --- SCREEN 7: GIFT --- */
+        .gift-box {
+            font-size: 7rem;
+            cursor: pointer;
+            animation: bounce 2s infinite;
+            transition: 0.3s;
+        }
+        .gift-box.open { animation: shake 0.5s; }
+        
+        @keyframes shake {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(10deg); }
+            50% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        /* --- CONFETTI CANVAS --- */
+        #confetti {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 99;
+        }
+
+    </style>
+</head>
+<body>
+	<audio id="bg-music" loop>
+    <!-- Tum baad me apni music file yahan replace kar sakti ho -->
+    <source src="ytmp3free.cc_ehsaas-teri-ulfat-main-jita-har-pal-reels-love-sadlovesong-youtubemp3free.org.mp3" type="audio/mpeg">
+</audio>
+
+    <div id="app">
+        <canvas id="confetti"></canvas>
+
+        <div id="screen-loading" class="screen active">
+            <div class="loader-ring">
+                <span id="countdown-number">3</span>
+            </div>
+            <p style="margin-top: 30px; letter-spacing: 1px;">Crafting your special moment...</p>
+        </div>
+
+        <div id="screen-intro" class="screen">
+            <img src="WhatsApp Image 2025-12-03 at 17.45.34.jpeg" class="bear-img" alt="Cute Bear">
+            <h1>A Cutiepie was born today!<br><small>A special date(21 feb 2026)</small></h1>
+            <p>Yes, it's YOU! A little surprise awaits...</p>
+            <button class="btn" onclick="nextScreen('screen-cake')">Start the surprise 🎁</button>
+        </div>
+
+        <div id="screen-cake" class="screen">
+            <h1>Make a Wish!</h1>
+            <div class="cake-container" onclick="lightCandle()">
+                <div class="candle"></div>
+                <div class="flame"></div>
+                <div class="cake-emoji">🎂</div>
+            </div>
+            <p id="cake-msg">(Tap the cake to decorate!)</p>
+            <button id="cake-btn" class="btn hidden" onclick="nextScreen('screen-balloons')">Cut the Cake 🔪</button>
+        </div>
+
+        <div id="screen-balloons" class="screen">
+            <h1>Pop the Balloons!</h1>
+            <div class="balloon-grid">
+                <div class="balloon" style="background:#ff7675; animation-delay:0s;" onclick="pop(this)">
+                    <span class="balloon-text">You</span>
+                </div>
+                <div class="balloon" style="background:#a29bfe; animation-delay:0.5s;" onclick="pop(this)">
+                    <span class="balloon-text">Are</span>
+                </div>
+                <div class="balloon" style="background:#fd79a8; animation-delay:1s;" onclick="pop(this)">
+                    <span class="balloon-text">A</span>
+                </div>
+                <div class="balloon" style="background:#00b894; animation-delay:1.5s;" onclick="pop(this)">
+                    <span class="balloon-text">Cutie</span>
+                </div>
+            </div>
+            <p>(Pop all 4 balloons)</p>
+            <button id="balloon-btn" class="btn hidden" onclick="nextScreen('screen-gallery')">Next Surprise ➡️</button>
+        </div>
+
+        <div id="screen-gallery" class="screen">
+            
+
+            <h1 style="font-size: 2.2rem;">Mr. Handsome you!!❤️😘</h1>
+            
+            
+            <div class="gallery-container">
+		<div class="photo-card">
+			<img src="Screenshot 2025-12-14 143912.png">
+		</div>
+            </div>
+
+            <button class="btn" onclick="nextScreen('screen-message')">Open My Message 💌</button>
+        </div>
+
+        <div id="screen-message" class="screen">
+            <h1>A Special Message</h1>
+            <div class="message-card">
+                <h2 style="font-family:'Dancing Script'; color:#d63031; margin-bottom:15px;">Happy Birthday!</h2>
+                <div class="message-text">
+                    You deserve all the happiness, love, and smiles in the world today and always. 
+                    <br><br>
+                    You have this special way of making everything around you brighter. I hope your day is filled with laughter!
+                    <br><br>
+                    <strong>I Love You! 😘❤️</strong>
+                </div>
+            </div>
+            <button class="btn" style="margin-top: 30px;" onclick="nextScreen('screen-gift')">Next ➡️</button>
+        </div>
+
+        <div id="screen-gift" class="screen">
+            <h1>One Last Thing...</h1>
+            <div class="gift-box" onclick="openGift()">🎁</div>
+            <p id="gift-lbl">(Tap the gift)</p>
+            
+            <div id="final-content" class="hidden">
+                <h2 style="font-family:'Dancing Script'; font-size: 2.5rem; color:#fd79a8; margin: 20px 0;">Lots of love for you!</h2>
+                <p>Hope you loved your surprise!</p>
+                <button class="btn" onclick="location.reload()">Replay ↺</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA & STATE ---
+        // Default photos (Unsplash) - Used if no upload
+        let photos = [
+            'https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=500&q=80',
+            'https://images.unsplash.com/photo-1482849297067-f66f41f0f95b?w=500&q=80',
+            'https://images.unsplash.com/photo-1520854226103-380f64372170?w=500&q=80',
+            'https://images.unsplash.com/photo-1504199139190-d7400908d330?w=500&q=80'
+        ];
+        
+        let poppedCount = 0;
+        let candleLit = false;
+
+        // --- SCREEN NAVIGATION ---
+        function nextScreen(id) {
+            // Hide all active screens
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            // Show target
+            const target = document.getElementById(id);
+            target.style.display = 'flex';
+            setTimeout(() => target.classList.add('active'), 50);
+
+            // Trigger specific actions based on screen
+            if (id === 'screen-gallery') renderStack();
+        }
+
+        // --- 1. COUNTDOWN LOGIC ---
+        window.onload = () => {
+            let count = 3;
+            const el = document.getElementById('countdown-number');
+            const timer = setInterval(() => {
+                count--;
+                if(count > 0) {
+                    el.innerText = count;
+                } else {
+                    clearInterval(timer);
+                    el.innerText = "0";
+                    setTimeout(() => nextScreen('screen-intro'), 800);
+                }
+            }, 1000);
+        };
+
+        // --- 3. CAKE LOGIC ---
+        function lightCandle() {
+            if(candleLit) return;
+            document.querySelector('.candle').style.display = 'block';
+            document.querySelector('.flame').style.display = 'block';
+            document.getElementById('cake-msg').innerText = "YAY! Happy Birthday! 🎂";
+            document.getElementById('cake-btn').classList.remove('hidden');
+            fireConfetti();
+            candleLit = true;
+        }
+
+        // --- 4. BALLOON LOGIC ---
+        function pop(el) {
+            if(el.classList.contains('popped')) return;
+            el.classList.add('popped');
+            poppedCount++;
+            if(poppedCount === 4) {
+                document.getElementById('balloon-btn').classList.remove('hidden');
+                fireConfetti();
+            }
+        }
+
+        // --- 5. GALLERY LOGIC (STACK) ---
+        function renderStack() {
+            const container = document.getElementById('stack-container');
+            container.innerHTML = ''; // Clear current
+            
+            photos.forEach((src, index) => {
+                const card = document.createElement('div');
+                card.className = 'photo-card';
+                card.style.zIndex = photos.length - index;
+                // Random rotation for "messy stack" look
+                let rot = (Math.random() * 10) - 5; 
+                card.style.transform = `rotate(${rot}deg)`;
+                
+                card.innerHTML = `<img src="${src}" alt="Memory">`;
+                
+                // Click to swipe logic
+                card.onclick = () => {
+                    // Animate off screen
+                    card.style.transform = `translate(-150%, 50px) rotate(-20deg)`;
+                    card.style.opacity = '0';
+                    
+                    // Move to bottom of stack after animation
+                    setTimeout(() => {
+                        container.prepend(card);
+                        card.style.zIndex = 0;
+                        card.style.transform = `rotate(${rot}deg) scale(0.95)`;
+                        card.style.opacity = '1';
+                        
+                        // Re-adjust z-indices
+                        const cards = document.querySelectorAll('.photo-card');
+                        cards.forEach(c => {
+                            let currentZ = parseInt(c.style.zIndex);
+                            c.style.zIndex = currentZ + 1;
+                        });
+                    }, 600);
+                };
+                
+                container.appendChild(card);
+            });
+        }
+
+        // --- CUSTOM UPLOAD LOGIC ---
+        function handleUpload(event) {
+            const files = event.target.files;
+            if(files.length > 0) {
+                photos = []; // Reset existing
+                Array.from(files).forEach(file => {
+                    photos.push(URL.createObjectURL(file));
+                });
+                renderStack(); // Re-render immediately
+            }
+        }
+
+        // --- 7. GIFT LOGIC ---
+        function openGift() {
+            const box = document.querySelector('.gift-box');
+            if(box.classList.contains('open')) return;
+            
+            box.classList.add('open');
+            setTimeout(() => {
+                box.style.display = 'none';
+                document.getElementById('gift-lbl').style.display = 'none';
+                document.getElementById('final-content').classList.remove('hidden');
+                fireConfetti();
+                fireConfetti();
+            }, 1000);
+        }
+
+        // --- CONFETTI UTILS ---
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        function fireConfetti() {
+            let particles = [];
+            for(let i=0; i<100; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    color: `hsl(${Math.random()*360}, 100%, 50%)`,
+                    size: Math.random() * 10 + 5,
+                    speed: Math.random() * 5 + 2
+                });
+            }
+            
+            let animationId;
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let active = false;
+                particles.forEach(p => {
+                    p.y += p.speed;
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(p.x, p.y, p.size, p.size);
+                    if(p.y < canvas.height) active = true;
+                });
+                
+                if(active) requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+    // --- BACKGROUND MUSIC AUTOPLAY ---
+    const bgMusic = document.getElementById("bg-music");
+
+    function startMusic() {
+        bgMusic.volume = 0.4; // soft background volume
+        bgMusic.play().catch(() => {
+            console.log("Autoplay blocked until user interaction");
+        });
+
+        // Remove listeners after first interaction
+        document.removeEventListener("click", startMusic);
+        document.removeEventListener("touchstart", startMusic);
+    }
+
+    // First user interaction triggers music
+    document.addEventListener("click", startMusic);
+    document.addEventListener("touchstart", startMusic);
+
+    </script>
+</body>
+</html>
